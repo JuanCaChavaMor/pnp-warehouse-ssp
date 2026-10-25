@@ -1,0 +1,42 @@
+-- reset  (Frame .Modelle.Modell) — executed by Python at the start of every episode
+-- Resets the simulation, sets the seed, initialises the tables and runs until the first decision.
+
+var c: integer
+
+-- 1) simulation to zero (deletes all MUs, statistics and time)
+Ereignisverwalter.rücksetzen     -- name checked in 16.1 (German); equivalent to reset
+
+-- 2) seed of the random generators (Python writes the variable SeedRL before the call)
+--    (name checked in 16.1: ZufallszahlenVariante -> integer)
+Ereignisverwalter.ZufallszahlenVariante := SeedRL
+
+-- 3) table CurrentState: 1 row, headers in row 0 (Spaltenindex activated)
+CurrentState.delete
+CurrentState[1,0]  := "tipo_actual"
+CurrentState[2,0]  := "ocup_A"
+CurrentState[3,0]  := "tipo_A"
+CurrentState[4,0]  := "ocup_B"
+CurrentState[5,0]  := "tipo_B"
+CurrentState[6,0]  := "len_loop"
+CurrentState[7,0]  := "goal_state"
+CurrentState[8,0]  := "sim_time"
+CurrentState[9,0]  := "event_id"
+CurrentState[10,0] := "did_loop"
+CurrentState[11,0] := "n_evicted"
+CurrentState[12,0] := "blocked"
+CurrentState[13,0] := "completed_batch"
+CurrentState[14,0] := "batches"
+for c := 1 to 14
+    CurrentState[c,1] := 0
+next
+CurrentState["tipo_actual",1] := ""
+CurrentState["tipo_A",1] := ""
+CurrentState["tipo_B",1] := ""
+
+-- 4) table ActionControl: 1 row, empty column action
+ActionControl.delete
+ActionControl[1,0] := "action"
+ActionControl["action",1] := ""
+
+-- 5) start: the simulation runs by itself until pnpDecision stops it with the first game in the robot
+Ereignisverwalter.start

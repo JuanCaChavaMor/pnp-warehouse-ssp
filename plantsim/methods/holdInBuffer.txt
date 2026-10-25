@@ -1,0 +1,3 @@
+-- holdInBuffer  — exit control (before actions) of bufferID1 and bufferID2
+-- Intentionally empty: with an exit control registered, Plant Simulation does not move the MU by itself, so the
+-- games stay in the buffer until AIControl evicts them (other language) or empties them into the Senke (10 equal).

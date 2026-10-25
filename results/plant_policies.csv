@@ -1,0 +1,6 @@
+policy,decisions,decisions_sd,cost,loops,evictions
+greedy,1443.07,43.56,2317.67,437.80,0.00
+optimal MDP policy (gamma = 1),1854.23,181.71,3505.72,760.97,50.83
+k-free discounted MDP policy (warm-start point),1870.33,167.47,3551.30,768.83,57.53
+"Q-learning on the plant model, from scratch",1532.50,63.50,2533.98,423.67,83.07
+"Q-learning on the plant model, warm start",1417.60,26.22,2200.57,331.63,76.43

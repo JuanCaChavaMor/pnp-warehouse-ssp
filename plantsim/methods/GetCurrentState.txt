@@ -1,0 +1,46 @@
+-- GetCurrentState  (Frame .Modelle.Modell)
+-- Writes the "static" part of the state into the single row of CurrentState:
+-- type of the game in the robot, contents of the buffers, length of the loop, goal, time.
+-- Does NOT touch event_id nor the cost flags (did_loop, n_evicted, completed_batch): AIControl writes those
+-- when it applies the action, and Python reads them at the next decision.
+-- Called by pnpDecision; Python may call it as well (execute_get_state = true) without side effects.
+
+var mu: object
+
+-- type of the game waiting in the robot ("" if none)
+if PickAndPlace.AnzahlBEs > 0
+    mu := PickAndPlace.BE(1)
+    CurrentState["tipo_actual",1] := mu.Name
+else
+    CurrentState["tipo_actual",1] := ""
+end
+
+-- buffer A = bufferID1
+CurrentState["ocup_A",1] := bufferID1.AnzahlBEs
+if bufferID1.AnzahlBEs > 0
+    CurrentState["tipo_A",1] := bufferID1.BE(1).Name
+else
+    CurrentState["tipo_A",1] := ""
+end
+
+-- buffer B = bufferID2
+CurrentState["ocup_B",1] := bufferID2.AnzahlBEs
+if bufferID2.AnzahlBEs > 0
+    CurrentState["tipo_B",1] := bufferID2.BE(1).Name
+else
+    CurrentState["tipo_B",1] := ""
+end
+
+-- games going around (loop + eviction branches)
+CurrentState["len_loop",1] := Return_to_mainCon.AnzahlBEs + Förderstrecke8.AnzahlBEs + Förderstrecke9.AnzahlBEs
+
+-- goal: finished games in the Senke
+CurrentState["batches",1] := Senke.StatAnzahlEin / 10
+if Senke.StatAnzahlEin >= GoalGames
+    CurrentState["goal_state",1] := 1
+else
+    CurrentState["goal_state",1] := 0
+end
+
+-- simulation time in seconds
+CurrentState["sim_time",1] := Ereignisverwalter.Zeit

@@ -1,0 +1,14 @@
+-- BindingTime  — entry control of BindingStation (OPTIONAL)
+-- Binding time by language of the manual. For a fixed 20 s, do not register this method and keep the
+-- Bearbeitungszeit in the dialog.
+-- No @.move: an entry control must not move the MU, the station processes it afterwards.
+
+if @.Name = "DE"
+    ?.Bearbeitungszeit := 20
+elseif @.Name = "EN"
+    ?.Bearbeitungszeit := 20
+elseif @.Name = "ES"
+    ?.Bearbeitungszeit := 20
+else
+    print "BindingTime: unknown language " + @.Name
+end

@@ -1,0 +1,20 @@
+-- assembleGame  — exit control (before actions) of Montagestation
+-- With Hauptteil-Vorgänger = 2 (Förderstrecke1, manuals), the main MU of the assembled game IS the manual, whose
+-- Name is already "DE" | "EN" | "ES" (column Name of SystemLoad). The game board is the mounted part and is
+-- consumed. No further attribute is needed.
+-- (The earlier bug, "else @.Name := 'ES'", was an assignment that renamed everything to ES.)
+
+if @.Name /= "DE" and @.Name /= "EN" and @.Name /= "ES"
+    print "assembleGame: unknown language '" + @.Name + "' — check Hauptteil-Vorgänger of Montagestation"
+end
+
+-- colour by language, for the animation only
+if @.Name = "DE"
+    @._3D.MaterialDiffuseFarbe := 100
+elseif @.Name = "EN"
+    @._3D.MaterialDiffuseFarbe := 0
+elseif @.Name = "ES"
+    @._3D.MaterialDiffuseFarbe := 225
+end
+
+@.move

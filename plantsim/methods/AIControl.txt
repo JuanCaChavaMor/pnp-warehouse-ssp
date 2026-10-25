@@ -1,0 +1,75 @@
+-- AIControl  (Frame .Modelle.Modell) — executed by Python after it has written ActionControl["action",1]
+-- Applies the action to the game waiting in the robot and resumes the simulation.
+--   "A"    -> bufferID1      "B" -> bufferID2      "LOOP" -> Return_to_mainCon (goes around the loop)
+-- Rules of the problem (identical to src/pnpssp/mdp.py):
+--   * placing a game into a buffer holding games of ANOTHER language sends the partial batch back to the loop
+--     (n_evicted = n)
+--   * at 10 equal games the buffer is emptied into the Senke                           (completed_batch = 1)
+-- The flags are written to CurrentState; Python reads them at the next decision.
+
+var act: string := ActionControl["action",1]
+var game: object
+var buf: object
+var outLine: object
+var n: integer
+var i: integer
+var mu: object
+
+-- 0) reset the flags of the previous action
+CurrentState["did_loop",1] := 0
+CurrentState["n_evicted",1] := 0
+CurrentState["blocked",1] := 0
+CurrentState["completed_batch",1] := 0
+
+-- 1) validation: there must be a game in the robot and a valid action.
+--    Otherwise the simulation is NOT resumed: Python sees the timeout and the error stays in the Console.
+if PickAndPlace.AnzahlBEs = 0
+    print "AIControl: no game in the robot"
+    return
+end
+if act /= "A" and act /= "B" and act /= "LOOP"
+    print "AIControl: invalid action '" + act + "'"
+    return
+end
+game := PickAndPlace.BE(1)
+
+-- 2) apply
+if act = "LOOP"
+    CurrentState["did_loop",1] := 1
+    game.move(Return_to_mainCon)
+else
+    if act = "A"
+        buf := bufferID1
+        outLine := Förderstrecke9
+    else
+        buf := bufferID2
+        outLine := Förderstrecke8
+    end
+
+    -- 2a) eviction of the partial batch if the language differs
+    n := buf.AnzahlBEs
+    if n > 0 and buf.BE(1).Name /= game.Name
+        CurrentState["n_evicted",1] := n
+        for i := 1 to n
+            mu := buf.BE(1)
+            mu.move(outLine)          -- branch connected to MainConveyor: back to the loop
+        next
+    end
+
+    -- 2b) put the game directly into the buffer (not via the feeding conveyor),
+    --     so that the occupancy Python sees at the next decision is exact
+    game.move(buf)
+
+    -- 2c) complete batch: empty into the Senke
+    if buf.AnzahlBEs >= 10
+        CurrentState["completed_batch",1] := 1
+        while buf.AnzahlBEs > 0
+            mu := buf.BE(1)
+            mu.move(Senke)
+        end
+    end
+end
+
+-- 3) clear the action and resume until the next decision
+ActionControl["action",1] := ""
+Ereignisverwalter.start

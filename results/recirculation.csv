@@ -1,0 +1,15 @@
+loop_delay,merge,policy,finished,episodes,decisions,decisions_se,loop_mean
+never (MDP),-,optimal (MDP),30,30,1334.633,4.643,0.000
+never (MDP),-,greedy,30,30,1435.967,4.886,0.000
+5,alternate,optimal (MDP),30,30,1989.033,16.081,20.104
+5,alternate,greedy,30,30,1767.567,6.362,4.009
+20,alternate,optimal (MDP),30,30,1931.533,22.847,27.394
+20,alternate,greedy,30,30,1453.600,6.193,6.541
+60,alternate,optimal (MDP),30,30,1903.067,24.692,43.279
+60,alternate,greedy,30,30,1436.033,7.594,18.052
+5,loop_first,optimal (MDP),0,30,,,
+5,loop_first,greedy,0,30,,,
+20,loop_first,optimal (MDP),11,30,1724.182,39.696,7.864
+20,loop_first,greedy,12,30,1499.833,18.258,6.192
+60,loop_first,optimal (MDP),30,30,1771.833,28.741,24.943
+60,loop_first,greedy,30,30,1428.333,8.704,17.057

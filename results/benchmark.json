@@ -1,0 +1,60 @@
+{
+  "parameters": {
+    "arrival_p": {
+      "DE": 0.4,
+      "EN": 0.35,
+      "ES": 0.25
+    },
+    "capacity": 10,
+    "flushes": 100,
+    "c_route": 1.0,
+    "c_loop": 2.0,
+    "C_lin": 1.5,
+    "gamma": 0.99,
+    "episodes": 5000,
+    "envs": 512,
+    "seed": 42,
+    "n_eval": 1000
+  },
+  "n_states": 163923,
+  "V_star": 1965.020009905464,
+  "J_greedy": 2288.697469843848,
+  "J_ref": 1965.8505147496548,
+  "J_ql": 1966.146694580937,
+  "delta_gamma": 0.6519569331310322,
+  "delta_k": 0.17854791105992263,
+  "delta_alg": 0.2961798312821884,
+  "ql_runtime_s": 31.34496235847473,
+  "agreement_all": 0.9852248921749845,
+  "agreement_visited": 0.9903380007614535,
+  "differences_optimal_vs_greedy_visited_states": {
+    "greedy LOOP -> optimal B (evict)": 5098,
+    "greedy LOOP -> optimal A (evict)": 5070
+  },
+  "simulated": {
+    "optimal": {
+      "mean_cost": 1965.7725,
+      "std_cost": 62.223584706684974,
+      "mean_length": 1333.84,
+      "mean_loops": 276.265,
+      "mean_evictions": 35.204,
+      "terminated": 1.0
+    },
+    "greedy": {
+      "mean_cost": 2290.478,
+      "std_cost": 88.63266619029352,
+      "mean_length": 1433.332,
+      "mean_loops": 428.573,
+      "mean_evictions": 0.0,
+      "terminated": 1.0
+    },
+    "q_learning": {
+      "mean_cost": 1965.161,
+      "std_cost": 62.08811141434405,
+      "mean_length": 1333.84,
+      "mean_loops": 274.676,
+      "mean_evictions": 37.005,
+      "terminated": 1.0
+    }
+  }
+}

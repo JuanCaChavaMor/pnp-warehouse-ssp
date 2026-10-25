@@ -1,0 +1,11 @@
+\begin{tabular}{lrrr}
+\toprule
+policy & decisions for 1000 games & loops & evictions \\
+\midrule
+greedy & 1443 $\pm$ 44 & 438 & 0 \\
+optimal MDP policy (gamma = 1) & 1854 $\pm$ 182 & 761 & 51 \\
+k-free discounted MDP policy (warm-start point) & 1870 $\pm$ 167 & 769 & 58 \\
+Q-learning on the plant model, from scratch & 1532 $\pm$ 64 & 424 & 83 \\
+Q-learning on the plant model, warm start & 1418 $\pm$ 26 & 332 & 76 \\
+\bottomrule
+\end{tabular}
