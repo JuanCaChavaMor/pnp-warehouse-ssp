@@ -1,0 +1,18 @@
+loop_delay,merge,policy,model_decisions,finished,decisions,decisions_sd,loops,evictions,max_loop
+5,alternate,greedy,,30,1749.733,31.703,743.633,0.000,24
+5,alternate,SSP optimum without return,,30,1986.667,106.722,891.367,52.833,118
+5,alternate,"SSP with return (d = 5, alternate)",1801.778,30,1696.600,36.678,638.433,33.567,17
+5,alternate,"SSP with return (d = 20, alternate)",,30,1710.833,36.859,675.100,23.633,17
+20,alternate,greedy,,30,1443.067,42.830,437.800,0.000,28
+20,alternate,SSP optimum without return,,30,1854.233,178.660,760.967,50.833,118
+20,alternate,"SSP with return (d = 20, alternate)",1534.264,30,1345.167,21.947,292.333,38.700,16
+60,alternate,greedy,,30,1443.633,47.240,437.333,0.000,43
+60,alternate,SSP optimum without return,,30,1860.700,147.902,770.567,49.000,113
+60,alternate,"SSP with return (d = 60, alternate)",1443.793,30,1388.200,36.794,356.200,23.467,45
+60,alternate,"SSP with return (d = 20, alternate)",,30,1387.133,32.155,339.533,31.533,40
+20,loop_first,greedy,,10,1500.400,79.158,495.000,0.000,19
+20,loop_first,SSP optimum without return,,7,1808.857,168.402,747.143,32.000,19
+20,loop_first,"SSP with return (d = 20, alternate)",,30,1346.067,22.636,292.567,38.667,17
+60,loop_first,greedy,,30,1437.100,44.830,430.567,0.000,46
+60,loop_first,SSP optimum without return,,29,1807.759,161.670,742.172,34.793,59
+60,loop_first,"SSP with return (d = 20, alternate)",,30,1395.233,39.598,348.133,30.000,43

@@ -78,3 +78,36 @@ for i, (v, sd) in enumerate(zip(pp.decisions, pp.decisions_sd)):
 a2.grid(axis="y", visible=False)
 save(fig, FIG / "recirculation.png")
 print("figures written to", FIG)
+
+# ---------------------------------------------------------------- 4. the SSP with returning games on the plant model
+rs = pd.read_csv(RES / "recirculation_ssp.csv")
+cases = list(dict.fromkeys(zip(rs.loop_delay, rs["merge"])))
+fig, ax = plt.subplots(figsize=(9, 3.6))
+x = np.arange(len(cases))
+w = 0.27
+for k, (lab, col) in enumerate((("greedy", C[1]), ("SSP optimum without return", MUTED),
+                                 ("SSP with return", C[0]))):
+    vals, errs, fin = [], [], []
+    for d, mg in cases:
+        g = rs[(rs.loop_delay == d) & (rs["merge"] == mg)]
+        if lab == "SSP with return":
+            own = g[g.policy == f"SSP with return (d = {d}, {mg.replace('_', ' ')})"]
+            g = own if len(own) else g[g.policy == "SSP with return (d = 20, alternate)"]
+        else:
+            g = g[g.policy == lab]
+        r0 = g.iloc[0]
+        vals.append(r0.decisions)
+        errs.append(1.96 * r0.decisions_sd / np.sqrt(max(r0.finished, 1)))
+        fin.append(int(r0.finished))
+    ax.bar(x + (k - 1) * w, vals, w, yerr=errs, color=col, label=lab if lab != "SSP with return" else
+           "SSP with return (this model)")
+    for xi, v, e, f in zip(x + (k - 1) * w, vals, errs, fin):
+        if f < 30:
+            ax.text(xi, v + e + 12, f"{f}/30\nfinish", ha="center", fontsize=6, color=INK)
+ax.set_xticks(x, [f"d = {d}\n{mg.replace('_', ' ')}" for d, mg in cases])
+ax.set_ylim(1200, None)
+ax.set_ylabel("robot decisions for 1000 games")
+ax.set_xlabel("plant model: round trip of the loop (decisions) and merge rule")
+ax.legend(fontsize=7, loc="upper right", ncol=3)
+ax.grid(axis="x", visible=False)
+save(fig, FIG / "recirculation_ssp.png")

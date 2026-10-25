@@ -5,8 +5,9 @@ A pick-and-place robot sorts board games in three languages (DE, EN, ES) into tw
 batch; a game of another language sends the partial batch back to the loop. Goal: 1000 games as fast as possible.
 
 This repository formulates the robot's decision as a **stochastic shortest-path problem**, solves it exactly, uses
-the solution to validate **tabular Q-learning**, connects the agent to the Plant Simulation model (SimTalk methods
-+ COM client), and shows what the exact model gets wrong about the plant.
+the solution to validate **tabular Q-learning**, shows what that model gets wrong about the plant (looped and
+evicted games come back), solves the **model with returning games** exactly as well, and connects the agents to the
+Plant Simulation model (SimTalk methods + COM client).
 Course project, *Discrete Simulation and Reinforcement Learning*, HSBI, summer term 2026.
 
 **Report:** [`report/report.pdf`](report/report.pdf)
@@ -20,15 +21,17 @@ Course project, *Discrete Simulation and Reinforcement Learning*, HSBI, summer t
 | Discounting | gamma = 0.99 costs 0.03 %; the SSP needs no discount (gamma = 1) |
 | **Games come back** (mock of the plant) | the SSP assumes looped/evicted games vanish; when they return, the "optimal" policy needs **up to a third more** robot decisions than the heuristic |
 | Merge rule | if returning games have priority at the merge, the robot can be starved of new games and never finish |
-| Q-learning on the plant model, warm start from the SSP | the only policy that beats the heuristic there: 1418 vs 1443 decisions, 40 % less spread |
+| Q-learning on the plant model, warm start from the SSP | 1418 vs 1443 decisions for the heuristic |
+| **Model with returning games** (loop contents in the state, 2.9 M states, relative value iteration) | **1345 decisions, 6.8 % fewer than the heuristic**, best of all policies; robust to the loop length and the merge rule (finishes every episode where the heuristic gets stuck) |
 
-![recirculation](figures/recirculation.png)
+![recirculation](figures/recirculation_ssp.png)
 
 ## Layout
 
 ```
 src/pnpssp/
   mdp.py              state, feasible actions, transition, cost (identities and parameters of the plant model)
+  recirculation.py    the problem with returning games: loop contents in the state, relative value iteration
   value_iteration.py  exact solver (layered over the batch counter k), policy evaluation, k-free discounted variant
   qlearning.py        tabular Q-learning, vectorised parallel environments (PyTorch)
   environment.py      one interface, two backends: 'python' (the SSP) and 'plantsim' (COM)
@@ -36,7 +39,8 @@ src/pnpssp/
   mock_plantsim.py    stand-in for the Plant Simulation model: tests, and games that come back
   policies.py         greedy heuristic, evaluation
 plantsim/             SimTalk methods (reset, pnpDecision, GetCurrentState, AIControl, ...) and setup of the model
-scripts/              run_benchmark, gamma_sweep, share_sensitivity, recirculation, train_on_plant_model, make_figures
+scripts/              run_benchmark, gamma_sweep, share_sensitivity, recirculation, train_on_plant_model,
+                      recirculation_ssp, make_figures
 results/ figures/     outputs of the scripts
 report/               LaTeX source, tables, PDF
 tests/                SSP, solver, COM protocol against the mock
@@ -55,6 +59,7 @@ python scripts/gamma_sweep.py
 python scripts/share_sensitivity.py
 python scripts/recirculation.py          # games that come back (a few minutes)
 python scripts/train_on_plant_model.py   # Q-learning on the plant model (about 4 min)
+python scripts/recirculation_ssp.py      # model with returning games (~35 min; solved policies cached in results/policies)
 python scripts/make_figures.py
 pytest -q
 cd report && make

@@ -15,7 +15,9 @@ Protocol (one decision = one game ready to leave the PickAndPlace robot):
 
 The client converts the row into the MDP state (q1, n1, q2, n2, lam, k) of mdp.py:
     q1 = tipo_A (bufferID1), n1 = ocup_A, q2 = tipo_B (bufferID2), n2 = ocup_B, lam = tipo_actual,
-    k  = completed batches = floor(sink count / 10).
+    k  = completed batches = floor(sink count / 10);
+and, for the model with returning games (recirculation.py), the games going around by language
+    m  = (loop_DE, loop_EN, loop_ES).
 
 Untested against a live Plant Simulation in this repository (no Windows licence in CI); the protocol is tested with
 a simulated COM object in tests/test_pnpssp.py.
@@ -28,7 +30,7 @@ import time
 from .mdp import TYPE_CODES
 
 FIELDS = ("tipo_actual", "ocup_A", "tipo_A", "ocup_B", "tipo_B", "len_loop", "goal_state", "sim_time", "event_id",
-          "did_loop", "n_evicted", "blocked", "completed_batch", "batches")
+          "did_loop", "n_evicted", "blocked", "completed_batch", "batches", "loop_DE", "loop_EN", "loop_ES")
 
 
 class PlantSimTimeout(RuntimeError):
@@ -75,6 +77,7 @@ class PlantSimClient:
     def read_row(self) -> dict:
         row = {f: self.get("CurrentState", f) for f in FIELDS}
         row["state"] = self.to_mdp_state(row)
+        row["loop"] = (int(row["loop_DE"]), int(row["loop_EN"]), int(row["loop_ES"]))
         return row
 
     @staticmethod

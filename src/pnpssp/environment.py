@@ -55,7 +55,8 @@ class WarehouseEnv:
         if self.backend == "plantsim":
             seed = None if self.seed is None else self.seed + self._episode
             self._episode += 1
-            self._set(self.client.reset(seed))
+            self.info = self.client.reset(seed)
+            self._set(self.info)
         else:
             self.q1 = self.n1 = self.q2 = self.n2 = 0
             self.k = 0

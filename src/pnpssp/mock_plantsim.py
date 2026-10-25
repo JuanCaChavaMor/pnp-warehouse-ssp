@@ -76,7 +76,8 @@ class MockPlantSim:
         self.loop = deque()                  # (due decision, language)
         self.sink, self.t, self.robot, self.last_from_loop = 0, 0, None, False
         self.state = dict(tipo_actual="", ocup_A=0, tipo_A="", ocup_B=0, tipo_B="", len_loop=0, goal_state=0,
-                          sim_time=0, event_id=0, did_loop=0, n_evicted=0, blocked=0, completed_batch=0, batches=0)
+                          sim_time=0, event_id=0, did_loop=0, n_evicted=0, blocked=0, completed_batch=0, batches=0,
+                          loop_DE=0, loop_EN=0, loop_ES=0)
         self.action = ""
         self._next_decision()
 
@@ -104,6 +105,8 @@ class MockPlantSim:
             s[f"ocup_{b}"] = len(self.buf[b])
             s[f"tipo_{b}"] = self.buf[b][0] if self.buf[b] else ""
         s["len_loop"] = len(self.loop)
+        for name in NAMES:
+            s[f"loop_{name}"] = sum(g == name for _, g in self.loop)
         s["batches"] = self.sink / 10
         s["goal_state"] = int(self.sink >= self.values["GoalGames"])
         s["sim_time"] = self.t

@@ -97,3 +97,32 @@ def test_mock_recirculation_returns_looped_games():
     cl.step("LOOP")
     cl.step("LOOP")
     assert cl.read_row()["tipo_actual"] == first          # back at the robot two decisions later
+
+
+def test_recirculation_model_small():
+    import numpy as np
+    from pnpssp.recirculation import RecirculationModel, apply_action
+    from pnpssp.mdp import A_LOOP, A_S1, A_S2
+    from pnpssp.policies import greedy_action
+    # eviction: 3 EN games leave bufferID1 for the loop, the DE game starts a new batch
+    assert apply_action(2, 3, 0, 0, 1, A_S1) == ((1, 1, 0, 0), 2, 3, False)
+    assert apply_action(1, 9, 0, 0, 1, A_S1) == ((0, 0, 0, 0), 0, 0, True)       # tenth game: batch complete
+    assert apply_action(1, 2, 2, 5, 3, A_LOOP) == ((1, 2, 2, 5), 3, 1, False)
+    m = RecirculationModel(d=6, L_max=4)
+    ok = m.FEAS
+    assert np.allclose(m.P[ok].sum(-1), 1, atol=1e-6) and ok.any(1).all()
+    # LOOP from an empty loop: the next game is the looped one with probability rho(1) = 1/6
+    s = m.index(1, 2, 2, 5, 3, (0, 0, 0))
+    back = m.index(1, 2, 2, 5, 3, (0, 0, 0))                      # the ES came back, loop empty again
+    new_es = m.index(1, 2, 2, 5, 3, (0, 0, 1))                    # a new ES from the source, the old one still out
+    assert abs(m.P[s, A_LOOP][m.NXT[s, A_LOOP] == back].sum() - 1 / 6) < 1e-6
+    assert abs(m.P[s, A_LOOP][m.NXT[s, A_LOOP] == new_es].sum() - 5 / 6 * 0.25) < 1e-6
+    # the optimum is at least as good as the greedy heuristic, inside the model
+    r = m.solve(verbose=False, tol=1e-6)
+    pol = np.zeros(m.N, np.int64)
+    for bi, b in enumerate(m.B):
+        for lam in (1, 2, 3):
+            rows = np.arange(m.nM) + (bi * 3 + lam - 1) * m.nM
+            a = greedy_action(*b, lam)
+            pol[rows] = np.where(m.FEAS[rows, a], a, A_LOOP)
+    assert r["rate"] >= m.policy_rate(pol, tol=1e-6) - 1e-6

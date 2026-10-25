@@ -50,3 +50,15 @@ rows = [f"{x.policy} & {x.decisions:.0f} $\\pm$ {x.decisions_sd:.0f} & {x.loops:
         for x in pp.itertuples()]
 (OUT / "plant.tex").write_text(tab("lrrr", "policy & decisions for 1000 games & loops & evictions", rows))
 print("tables written")
+
+rs = pd.read_csv(RES / "recirculation_ssp.csv")
+rows = []
+for x in rs.itertuples():
+    pol = x.policy.replace("SSP with return", "with return").replace("SSP optimum without return",
+                                                                     "SSP optimum without return")
+    fin = "" if x.finished == 30 else f" ({x.finished}/30)"
+    model = "" if pd.isna(x.model_decisions) else f"{x.model_decisions:.0f}"
+    rows.append(f"{x.loop_delay} & {x.merge.replace('_', ' ')} & {pol} & {x.decisions:.0f} $\\pm$ "
+                f"{x.decisions_sd:.0f}{fin} & {x.loops:.0f} & {x.evictions:.0f} & {model} \\\\")
+(OUT / "recirculation_ssp.tex").write_text(tab("rllrrrr", "$d$ & merge & policy & decisions & loops & evictions & "
+                                               "model", rows))

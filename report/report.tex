@@ -16,7 +16,7 @@
 
 \graphicspath{{../figures/}}
 
-\title{Sorting Board Games with a Pick-and-Place Robot:\\ an Exact Benchmark, and What the Model Leaves Out}
+\title{Sorting Board Games with a Pick-and-Place Robot:\\ Exact Models With and Without Returning Games}
 \author{Juan Carlos Chavarr\'ia Morales\\[2pt]
   \small M.Sc.\ Optimization, Hochschule Bielefeld (HSBI)\\
   \small Course \emph{Discrete Simulation and Reinforcement Learning}, summer term 2026}
@@ -30,16 +30,17 @@ In a Plant Simulation model of a board-game factory, games in three languages re
 random order. The robot puts each game into one of two intermediate storages or sends it around a conveyor loop;
 a storage takes one language only, a game of another language sends its partial batch back to the loop, and ten
 equal games leave the storage as a batch. A reinforcement-learning agent is to control the robot so that 1000
-games are finished as quickly as possible. We formulate the decision problem as a stochastic shortest-path problem
-(163\,923 states), solve it exactly by value iteration and use the solution to validate tabular Q-learning: the
-learned policy is within \SI{0.06}{\percent} of the optimum, and both are \SI{14}{\percent} cheaper than the greedy
-heuristic used as baseline in the course, mostly by evicting small batches where the heuristic loops. The model,
-however, treats looped and evicted games as gone, while in the plant they return to the robot. On a decision-level
-model of the plant that lets them return, the ``optimal'' policy needs up to a third more robot decisions than
-the greedy heuristic, and with a loop that has priority at the merge both policies can lock the
-robot in an endless loop. Q-learning on the plant model, started from the model's solution, is the only policy
-that beats the heuristic there (\SI{1.8}{\percent} fewer decisions, \SI{40}{\percent} less spread). The repository
-contains the SimTalk methods and the COM client that connect the agent to the Plant Simulation model.
+games are finished as quickly as possible. We first formulate the decision as a stochastic shortest-path problem
+(163\,923 states) in which looped and evicted games disappear, solve it exactly and use it to validate tabular
+Q-learning (within \SI{0.06}{\percent} of the optimum, both \SI{14}{\percent} cheaper than the greedy heuristic of the
+course). In the plant, however, those games come back to the robot, and on a decision-level model of the plant
+that lets them return, the policy that is optimal for this problem needs up to a third more robot decisions than the
+heuristic. Adding the contents of the loop to the state, as the Plant Simulation model has it, gives a Markov
+decision problem with 2.9 million states, solved by relative value iteration. Its policy finishes 1000 games in
+1345 decisions where the heuristic needs 1443 (\SI{6.8}{\percent} fewer, the best of all policies tested), keeps the
+loop short, and is robust to the length of the loop and to the merge rule: where returning games have priority at
+the merge, it finishes every episode while the heuristic gets stuck in two of three. The repository contains the
+SimTalk methods and the COM client that connect the agents to the Plant Simulation model.
 \end{abstract}
 
 % =====================================================================================================================
@@ -162,8 +163,8 @@ eviction to pay off.
 The environment has two backends with the same interface and the same state encoding: the SSP of the previous
 sections, and the Plant Simulation model through its COM interface. In the model (\texttt{plantsim/methods}), the
 exit control \texttt{pnpDecision} of the robot fires when a game is ready to leave it, writes the state into the table
-\texttt{CurrentState} (language of the game, contents of both storages, games in the loop, finished batches,
-simulated time), increments an event counter and stops the event controller. The Python client waits for the new
+\texttt{CurrentState} (language of the game, contents of both storages, games in the loop in total and by
+language, finished batches, simulated time), increments an event counter and stops the event controller. The Python client waits for the new
 event, writes \texttt{A}, \texttt{B} or \texttt{LOOP} into \texttt{ActionControl} and runs \texttt{AIControl}, which
 applies the action with the rules of the SSP (eviction to the loop, flush of ten equal games to the sink), records
 loop, eviction and batch flags for the cost, and restarts the simulation until the next game reaches the robot.
@@ -207,7 +208,9 @@ property of the conveyor layout to check before any training.
 state without $k$, $\gamma = 0.99$; the contents of the loop are not observed) gives the results of
 \cref{tab:plant}. From scratch it does not reach the heuristic (1533 decisions); started from the solution of the
 SSP, it corrects the model's mistakes and finishes 1000 games in 1418 decisions, \SI{1.8}{\percent} fewer than the
-heuristic and with \SI{40}{\percent} less spread. It still evicts, but with fewer loops.
+heuristic and with \SI{40}{\percent} less spread. It still evicts, but with fewer loops. Without the loop in its
+state, however, it cannot tell when a game it sends around will meet the same storages again; \cref{sec:return} adds
+that information to the model.
 
 \begin{table}[H]
   \centering\small
@@ -216,6 +219,58 @@ heuristic and with \SI{40}{\percent} less spread. It still evicts, but with fewe
   \label{tab:plant}
   \input{tables/plant.tex}
 \end{table}
+
+% =====================================================================================================================
+\section{A model with returning games}\label{sec:return}
+
+The model of the plant is incomplete in one place: the state does not contain the games going around. We add them,
+$m = (m_\text{DE}, m_\text{EN}, m_\text{ES})$ with $m_\text{DE} + m_\text{EN} + m_\text{ES} \le L_\text{max}$, so the
+state becomes $(q_1, n_1, q_2, n_2, \lambda, m)$, the information \texttt{GetCurrentState} now writes from the loop
+conveyors of the Plant Simulation model. An action changes the storages as before; a loop or an eviction adds the
+games to $m$. The next game at the robot comes back from the loop with probability $\rho(L)$, $L$ the games going
+around after the action, and is then of language $j$ with probability $m_j / L$; otherwise it is a new game from
+the source. With a mean round trip of $d$ decisions, about $L/d$ games return per decision, and the merge caps the
+share of returning games: $\rho(L) = \min(L/d, 1/2)$ when loop and source join the main conveyor in turn. The loop
+holds at most $L_\text{max} = 20$ games; actions that would overfill it are infeasible.
+
+The proxy costs of loops and evictions are no longer needed, because their consequence, games to be handled
+again, is now part of the dynamics: every decision costs one robot cycle, and for 1000 games the best policy is the
+one that completes games at the highest rate per decision. This is an average-reward problem (reward 10 per
+completed batch; the batch counter $k$ is dropped, it matters only at the very end) with 2\,874\,333 states, solved
+by relative value iteration in about 12 minutes per case. Two approximations remain: the round trip is random
+with mean $d$ instead of fixed, and the loop is a multiset, not a queue.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{recirculation_ssp.pdf}
+  \caption{Decisions for 1000 games on the plant model (games return after exactly $d$ decisions, in order) for the
+    heuristic, the optimum of the problem without return, and the optimum of the problem with return (for the
+    loop-first merge, the policy computed for $d = 20$ with alternate merge). 95\% confidence intervals; episodes
+    that did not finish within 6000 decisions are left out.}
+  \label{fig:return}
+\end{figure}
+
+\begin{table}[t]
+  \centering\small
+  \caption{Policies on the plant model with returning games (30 episodes, mean $\pm$ standard deviation; in brackets,
+    episodes that finished within 6000 decisions; \emph{model}: decisions for 1000 games predicted by the model).}
+  \label{tab:return}
+  \resizebox{\linewidth}{!}{\input{tables/recirculation_ssp.tex}}
+\end{table}
+
+\Cref{fig:return,tab:return} test the policies on the plant model, where games return after exactly $d$ decisions
+and in the order in which they were sent. The policy of the model with return is the best in every case: 1345
+decisions for $d = 20$, \SI{6.8}{\percent} fewer than the heuristic (1443) and better than Q-learning on the plant model
+(1418, \cref{tab:plant}); 1697 against 1750 for a short loop ($d = 5$) and 1388 against 1444 for a long one
+($d = 60$). It is close to what the problem without return promised but could not deliver (1334): it still evicts,
+about 40 times per episode, but loops less than the heuristic (292 against 438) and keeps at most 16 games in the loop.
+
+The policy does not need to know $d$ precisely: the one computed for $d = 20$ is as good on $d = 60$ (1387) and only
+\SI{1}{\percent} worse on $d = 5$. Nor does it need the merge rule: with returning games first, where the heuristic
+finishes only 10 of 30 episodes for $d = 20$ and the policy without return 7, it finishes all 30 in 1346 decisions,
+because it never lets enough games circulate to starve the source. The model's own predictions (1534 decisions for
+$d = 20$) are pessimistic, a consequence of the random round trip, which lets some games return almost at once; the
+ranking of the policies, which is what the model is for, transfers.
 
 % =====================================================================================================================
 \section{Main changes with respect to the original benchmark}
@@ -234,6 +289,8 @@ heuristic and with \SI{40}{\percent} less spread. It still evicts, but with fewe
       sensitivity to the shares of the course exercise \\
     Plant interface & socket backend announced, not implemented & SimTalk methods and COM client following one
       decision protocol; mock of the model for tests \\
+    Model & looped and evicted games disappear & in addition: the problem with returning games (loop contents in
+      the state), solved exactly; \texttt{GetCurrentState} reports the loop by language \\
     Validation & optimum, Q-learning, $\gamma$ sweep on the SSP & in addition: returning games, merge rules,
       Q-learning on the plant model \\
     Code & scripts in one folder & package, scripts for every result, tests \\
@@ -245,18 +302,19 @@ heuristic and with \SI{40}{\percent} less spread. It still evicts, but with fewe
 \section{Conclusions}
 
 \begin{enumerate}
-  \item As a stochastic shortest-path problem the sorting task is small enough to be solved exactly; the optimum is
-    \SI{14}{\percent} cheaper than the greedy heuristic, mainly by evicting small batches instead of looping.
-  \item Tabular Q-learning reaches the optimum within \SI{0.06}{\percent}; the exact decomposition of its gap shows
-    that discounting, not learning, is its largest part.
-  \item The SSP assumes that looped and evicted games vanish. In the plant they return, and then the policy that is
-    optimal for the SSP needs up to a third more robot decisions than the heuristic. The benchmark validates the learning
-    algorithm, not the model of the plant.
-  \item Learning on a model with returning games, started from the SSP solution, beats the heuristic, but by
-    \SI{2}{\percent}, not \SI{14}{\percent}. The merge of the loop into the main conveyor must be checked first: with
-    priority for the loop the robot can be starved of new games.
-  \item The next steps are training on the Plant Simulation model itself through the COM interface, with the simulated
-    time as cost, and a state that includes the games in the loop.
+  \item As a stochastic shortest-path problem in which looped and evicted games disappear, the sorting task is solved
+    exactly; tabular Q-learning reaches that optimum within \SI{0.06}{\percent}. This validates the learning
+    algorithm.
+  \item It does not validate the model: in the plant the games come back, and the policy that is optimal for the
+    simplified problem needs up to a third more robot decisions than the greedy heuristic.
+  \item With the contents of the loop in the state, as in the Plant Simulation model, the problem is still solvable
+    exactly (2.9 million states). Its policy is the best of all tested on the plant model: \SI{6.8}{\percent} fewer
+    decisions than the heuristic for a round trip of 20 decisions, \SIrange{3}{4}{\percent} for shorter or longer
+    loops, robust to the length of the loop and to the merge rule, under which the heuristic can get stuck.
+  \item For the agent in Plant Simulation, the state must include the games going around (now written by
+    \texttt{GetCurrentState}), and this exact policy is the benchmark a learning agent on the plant should reach.
+    The next steps are training through the COM interface with the simulated time as cost, and checking the merge of
+    the loop into the main conveyor in the model.
 \end{enumerate}
 
 \section*{Code}

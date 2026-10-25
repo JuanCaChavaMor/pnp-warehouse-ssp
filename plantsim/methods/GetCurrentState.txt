@@ -6,6 +6,7 @@
 -- Called by pnpDecision; Python may call it as well (execute_get_state = true) without side effects.
 
 var mu: object
+var i: integer
 
 -- type of the game waiting in the robot ("" if none)
 if PickAndPlace.AnzahlBEs > 0
@@ -33,6 +34,23 @@ end
 
 -- games going around (loop + eviction branches)
 CurrentState["len_loop",1] := Return_to_mainCon.AnzahlBEs + Förderstrecke8.AnzahlBEs + Förderstrecke9.AnzahlBEs
+
+-- the same games by language (state of the model with returning games, src/pnpssp/recirculation.py)
+CurrentState["loop_DE",1] := 0
+CurrentState["loop_EN",1] := 0
+CurrentState["loop_ES",1] := 0
+for i := 1 to Return_to_mainCon.AnzahlBEs
+    mu := Return_to_mainCon.BE(i)
+    CurrentState["loop_" + mu.Name,1] := CurrentState["loop_" + mu.Name,1] + 1
+next
+for i := 1 to Förderstrecke8.AnzahlBEs
+    mu := Förderstrecke8.BE(i)
+    CurrentState["loop_" + mu.Name,1] := CurrentState["loop_" + mu.Name,1] + 1
+next
+for i := 1 to Förderstrecke9.AnzahlBEs
+    mu := Förderstrecke9.BE(i)
+    CurrentState["loop_" + mu.Name,1] := CurrentState["loop_" + mu.Name,1] + 1
+next
 
 -- goal: finished games in the Senke
 CurrentState["batches",1] := Senke.StatAnzahlEin / 10

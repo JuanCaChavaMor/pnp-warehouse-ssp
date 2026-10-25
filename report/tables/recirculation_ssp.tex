@@ -1,0 +1,23 @@
+\begin{tabular}{rllrrrr}
+\toprule
+$d$ & merge & policy & decisions & loops & evictions & model \\
+\midrule
+5 & alternate & greedy & 1750 $\pm$ 32 & 744 & 0 &  \\
+5 & alternate & SSP optimum without return & 1987 $\pm$ 107 & 891 & 53 &  \\
+5 & alternate & with return (d = 5, alternate) & 1697 $\pm$ 37 & 638 & 34 & 1802 \\
+5 & alternate & with return (d = 20, alternate) & 1711 $\pm$ 37 & 675 & 24 &  \\
+20 & alternate & greedy & 1443 $\pm$ 43 & 438 & 0 &  \\
+20 & alternate & SSP optimum without return & 1854 $\pm$ 179 & 761 & 51 &  \\
+20 & alternate & with return (d = 20, alternate) & 1345 $\pm$ 22 & 292 & 39 & 1534 \\
+60 & alternate & greedy & 1444 $\pm$ 47 & 437 & 0 &  \\
+60 & alternate & SSP optimum without return & 1861 $\pm$ 148 & 771 & 49 &  \\
+60 & alternate & with return (d = 60, alternate) & 1388 $\pm$ 37 & 356 & 23 & 1444 \\
+60 & alternate & with return (d = 20, alternate) & 1387 $\pm$ 32 & 340 & 32 &  \\
+20 & loop first & greedy & 1500 $\pm$ 79 (10/30) & 495 & 0 &  \\
+20 & loop first & SSP optimum without return & 1809 $\pm$ 168 (7/30) & 747 & 32 &  \\
+20 & loop first & with return (d = 20, alternate) & 1346 $\pm$ 23 & 293 & 39 &  \\
+60 & loop first & greedy & 1437 $\pm$ 45 & 431 & 0 &  \\
+60 & loop first & SSP optimum without return & 1808 $\pm$ 162 (29/30) & 742 & 35 &  \\
+60 & loop first & with return (d = 20, alternate) & 1395 $\pm$ 40 & 348 & 30 &  \\
+\bottomrule
+\end{tabular}

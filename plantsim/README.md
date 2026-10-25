@@ -4,6 +4,11 @@ Plant Simulation 16.1 (German object library), frame `.Modelle.Modell` of the bo
 (not included: the model file belongs to the course material). One file per Method in `methods/`; the file name is
 the Method name. SimTalk 2.0, one statement per line. The Python side is `src/pnpssp/plantsim_com.py`.
 
+Changes after the version used in the course (marked *new*): `GetCurrentState` also writes the games going around
+by language (`loop_DE`, `loop_EN`, `loop_ES`), which `reset` adds as columns 15–17 of `CurrentState`; the model
+with returning games (`src/pnpssp/recirculation.py`) needs them. Games that have already merged into
+`MainConveyor` on their way back are not counted, as for `len_loop`.
+
 ## A. Clean-up (delete from the frame)
 Objects: `Quelle` (the orphan without name, interval 0).
 Tables: `States`, `Actions`.
@@ -44,7 +49,7 @@ The three new connectors (Return_to_mainCon, Förderstrecke8, Förderstrecke9 �
 | Method | Registered at | Role |
 |---|---|---|
 | `reset` | — (called by Python) | resets simulation, tables, seed; runs to the first decision |
-| `GetCurrentState` | — (called by `pnpDecision`; optionally by Python) | writes the state row |
+| `GetCurrentState` | — (called by `pnpDecision`; optionally by Python) | writes the state row, including the loop contents by language (*new*) |
 | `pnpDecision` | PickAndPlace / Ausgang, vor Aktionen | decision point: state, event_id + 1, stops the event controller |
 | `AIControl` | — (called by Python) | applies A / B / LOOP, eviction, flush to the Senke, resumes |
 | `assembleGame` | Montagestation / Ausgang, vor Aktionen | checks the language (`Name`) and colours the game |

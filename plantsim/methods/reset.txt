@@ -26,7 +26,10 @@ CurrentState[11,0] := "n_evicted"
 CurrentState[12,0] := "blocked"
 CurrentState[13,0] := "completed_batch"
 CurrentState[14,0] := "batches"
-for c := 1 to 14
+CurrentState[15,0] := "loop_DE"
+CurrentState[16,0] := "loop_EN"
+CurrentState[17,0] := "loop_ES"
+for c := 1 to 17
     CurrentState[c,1] := 0
 next
 CurrentState["tipo_actual",1] := ""
